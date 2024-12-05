@@ -1,0 +1,15 @@
+{
+    "parser": "@typescript-eslint/parser", // 指定解析器
+    "plugins": [
+        "@typescript-eslint" // 指定插件
+    ],
+    "extends": [
+        "eslint:recommended", // 指定eslint推荐的规则
+        "plugin:@typescript-eslint/recommended" // 指定typescript推荐的规则
+    ],
+    //设置全局变量，防止出现报错，可以设置只读或者只写
+    "globals": {
+        // "var1": "writable",
+        "console": "readonly"
+    }
+}
