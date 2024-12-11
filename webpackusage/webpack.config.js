@@ -6,11 +6,17 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 //引入语法检查工具
 const ESLintPlugin = require('eslint-webpack-plugin');
-const { runtime } = require('webpack');
+const { runtime, webpack } = require('webpack');
 //获取环境变量，区分开发环境和生产环境 通过启动时npm run cross-env NODE_ENV=development或npm run cross-env NODE_ENV=production设置环境变量
 const isDev = process.env.NODE_ENV === 'development';
+const webpack1 = require('webpack');
 module.exports = {
-  mode: 'development', //开发模式
+  //开发模式， 同时还有production模式，none表示不使用webpack的打包功能，只进行简单的复制操作，适合静态资源的处理；developement表示开发环境，会有source-map，方便调试；production表示生产环境，会压缩代码，去除console.log等调试信息，提高性能；
+  //--mode(启动时设置) 用来设置模块内的process.env.NODE_ENV变量，默认是production，可以用--mode development或--mode production来覆盖默认值
+  //cross-env(启动时设置)是一个第三方模块，用来跨平台设置环境变量，可以代替webpack内置的--mode选项，安装：npm install cross-env --save-dev，可以设置node的process.env.NODE_ENV变量
+  //
+  // mode: 'development', 
+  mode: process.env.NODE_ENV, //使用环境变量
   devtool: false, //关闭source-map，因为生产环境不需要，可以加快打包速度
   devServer: {
     //开发服务器配置
@@ -51,6 +57,7 @@ module.exports = {
       // runtime: 'runtime', //依赖于runtime.js,runtime.js是webpack运行时代码，可以将一些公共代码提取到runtime.js中，减少重复代码，提高性能。即多个入口可以设置相同的runtime提取到公共代码，可以减少重复打包。解释就是webpack维护了一份引入清单，将这份清单分成两部分，一部分是入口文件，一部分是依赖文件，入口文件和依赖文件都会被打包到一起，但是入口文件和依赖文件之间有依赖关系，webpack会将依赖文件提取到runtime.js中，这样可以减少重复打包，提高性能。
     },
     index3: './src/index.ts',
+    babel: './src/babel.js',
     img: './src/img.js',
     txt: './src/txt.js',
   },
@@ -101,7 +108,8 @@ module.exports = {
       },
       //es6语法并不是所有浏览器都兼容，需要使用babel-loader将es6语法转换成es5语法，再交给浏览器执行
       {
-        test: /\.js$/, //匹配所有.js文件
+        test: /\.js$/, //匹配所有.js文件 
+        exclude: /babel.js/,
         // exclude: /node_modules/, //排除node_modules目录
         //因为要传参所以是对象形式
         use: {
@@ -215,6 +223,37 @@ module.exports = {
         test: /\.txt$/, //匹配所有.txt文件
         type: 'asset/source', //导出源内容，可以直接用txt文件内容，不需要再配置publicPath
       },
+      {
+        test: /babel.js/, //匹配所有babel.js文件, babel配置示例
+        use: [
+          {
+            loader: 'babel-loader',
+            options: {
+              targets: ['> 0.1%'], //只转换大于0.1%的浏览器
+              presets: [
+                ['@babel/preset-env',{
+                // useBuiltIns: false, //不使用polyfill，使用浏览器原生的api，可以手动引入polyfill 在文件中 import '@babel/polyfill'，问题是会全部引入
+                // useBuiltIns: 'entry', //可以根据浏览器版本和代码ES特性自动全部引入polyfill 使用import 'core-js/stable'; import 'regenerator-runtime/runtime'; 引入
+                // useBuiltIns: 'usage', //根据浏览器兼容性以及代码中使用到的api来进行polyfill实现按需引入
+                // corejs: 3, //指定core-js版本，这里使用3.x版本，
+
+                useBuiltIns: false, //因为引入polyfill会造成全局变量污染，可以使用 'babel-runtime'这个库来按需引入
+              }]
+              ], //使用@babel/preset-env来转换es6语法
+              plugins: [
+                [
+                  '@babel/plugin-transform-runtime', //可以将多份文件中的相同代码提取出来，减少重复引用，同时还可以自动按需局部引入，解决全局污染  useBuiltIns: false
+                {
+                  corejs: 3  //指定core-js版本，这里使用3.x版本，
+                  helpers: true, //是否将helpers方法提取到单独文件中，可以减少重复引用
+                  regenerator: true // 当在代码中使用 function* 声明一个生成器时, 会将其通过局部函数来实现，避免污染全局
+                },  
+                ]
+              ],
+            },
+          }
+        ]
+      }
     ],
   },
   //配置插件，可以用来扩展webpack的功能，比如自动生成html文件，压缩js文件，分析打包文件体积等
@@ -239,6 +278,10 @@ module.exports = {
     new ESLintPlugin({
       extensions: ['jsx', 'ts', 'tsx'], //检查的文件类型
       fix: false, //自动修复错误，如果不想自动修复，可以设置为false
+    }),
+    new webpack1.DefinePlugin({
+      //定义全局变量，可以在代码中使用process.env.NODE_ENV来获取环境变量
+      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
     }),
   ],
 };

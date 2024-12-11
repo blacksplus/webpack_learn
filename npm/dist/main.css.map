@@ -1,0 +1,1 @@
+{"version":3,"file":"main.css","mappings":";;;AAAA;IACI,qBAAqB;AACzB,C","sources":["webpack://math/./src/index.css"],"sourcesContent":["body{\r\n    background-color: red;\r\n}"],"names":[],"sourceRoot":""}
