@@ -1,0 +1,1 @@
+import('./bootstrap') // 动态加载 bootstrap 模块

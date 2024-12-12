@@ -66,6 +66,13 @@ module.exports = {
     path: path.resolve(__dirname, 'dist'), //打包后的文件存放的地方,__dirname是node.js中的一个全局变量，它指向当前执行脚本所在的目录
     filename: '[name].js', //打包后的文件名，可以替换成[name].js来生成多个入口文件对应的多个打包文件
     clean: true, //打包前先清空dist目录
+    // chunkLoading: false 'jsonp' 'require'
+    /**
+    * output.chunkLoading：指定异步模块加载的技术方案，当打包出的产物中包含异步加载的模块时，Webpack会根据chunkLoading属性的值来决定如何加载这些模块。可选的值有false、jsonp、require等
+    * false：不使用异步加载，即将所有模块打包到一个文件中。这种方式的优点是简单易用，缺点是可能会导致打包文件过大，影响页面加载速度。
+    * jsonp：使用JSONP技术实现异步加载。Webpack会将异步模块打包成单独的文件，并通过JSONP方式在页面中动态加载。这种方式的优点是可以将异步模块分离出来，减少主包的大小，缺点是需要在服务端配置JSONP回调函数，可能存在跨域问题。
+    * require：使用require.ensure实现异步加载。类似于jsonp方式，Webpack会将异步模块打包成单独的文件，但是加载方式不同。这种方式的优点是与CommonJS规范兼容，可以在Node.js中使用，缺点是使用不太方便。
+     */ 
   },
   //配置webpack如何处理不同文件，比如.js，.jsx，.css，.less，.scss等
   // module.rules数组中存放着一系列的规则，每个规则针对一种文件类型，webpack在遇到这些文件时，会根据这些规则进行处理
